@@ -1,11 +1,17 @@
 Bevy notes:
 
--ECS design for data driven design, cache locality, etc
+-ECS design for data driven design, cache locality, etc. Components like columns in DB, each row is an
+entity. Entities can have all, none, or some of the columns. None = marker entity
 
--fn move_players(mut q: Query<&mut Transform, With<Player>>), query all transforms, instead of querying all players with
-transforms, that way you only get the exact transform component data you are looking for, rather than all player data
+-Query (transform, player) to get both transform and player if you need them both, but if you just
+need transform for player, then use With<Player> to make query more efficient and have unused variable.
+Kind of like querying in SQL
+
 
 -Spawn bundles, which are 1-many components, each thing spawned is an entity
+
+-Put components together in a #[derive(bundle)] to make like a class, or put very tightly connected things together
+in a component like Transform struct
 
 -Resources are for global shared things
 
@@ -24,4 +30,3 @@ transforms, that way you only get the exact transform component data you are loo
 Wave based tower defense game. Protect the object in the middle. Monsters will try to destroy it
 and your defenses. Use different buildings and walls to protect the center. You only have a limited
 amount of money, so build carefully. Certain towers work better against monsters than other towers
-

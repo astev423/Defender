@@ -1,32 +1,56 @@
 use bevy::{prelude::*, window::PrimaryWindow};
 
 #[derive(Component)]
-struct Tile;
+pub struct Tile {
+    spawn_pos_xy: (f32, f32),
+}
 
-// Make grid off window size
-pub fn make_grid(commands: &mut Commands, windows: Query<&Window, With<PrimaryWindow>>) {
-    let window_size = get_window_size(windows);
-    let max_x_pos = window_size.x;
-    let max_y_pos = window_size.y;
-    for x in (220..max_x_pos - 180).step_by(41) {
-        for y in (150..max_y_pos - 110).step_by(41) {
+pub fn grid_plugin(app: &mut App) {
+    app.add_systems(Startup, make_grid)
+        .add_systems(Update, modify_clicked_tile);
+}
+
+pub fn make_grid(mut commands: Commands) {
+    for x in (41..1230).step_by(41).map(|x| x as f32) {
+        for y in (41..655).step_by(41).map(|x| x as f32) {
             // Spawn takes in a bundle of components which are data, entity itself has no data
-            let x_spawn_pos = x as f32 - max_x_pos as f32 / 2.;
-            let y_spawn_pos = y as f32 - max_y_pos as f32 / 2.;
             commands.spawn((
-                Tile,
-                Sprite::from_color(
-                    Color::linear_rgb(0., 255., 0.),
-                    Vec2 { x: 40., y: 40. },
-                ),
-                Transform::from_xyz(x_spawn_pos as f32, y_spawn_pos as f32, 0.),
+                Tile {
+                    spawn_pos_xy: (x, y),
+                },
+                Sprite::from_color(Color::linear_rgb(0., 255., 0.), Vec2 { x: 40., y: 40. }),
+                Transform::from_xyz(x - 620., -y + 340., 0.),
             ));
         }
     }
 }
 
-fn get_window_size(windows: Query<&Window, With<PrimaryWindow>>) -> UVec2 {
-    let window = windows.single().expect("More than one window, only have 1");
-    println!("{:?}", window.cursor_position());
-    window.physical_size()
+fn match_click_to_tile(windows: Query<&Window, With<PrimaryWindow>>) -> (f32, f32) {
+    let mouse_pos = windows.single().unwrap().cursor_position().unwrap();
+    let x_pos_remainder = mouse_pos.x % 41.;
+    let x_pos = mouse_pos.x - x_pos_remainder;
+    let y_pos_remainder = mouse_pos.y % 41.;
+    let y_pos = mouse_pos.y - y_pos_remainder;
+    (x_pos, y_pos)
+    //println!("matching x pos for tile starting at: {:?}", x_pos);
+    //println!("matching y pos for tile starting at: {:?}", y_pos);
+}
+
+pub fn modify_clicked_tile(
+    mouse: Res<ButtonInput<MouseButton>>,
+    windows: Query<&Window, With<PrimaryWindow>>,
+    // This matches the tile to its sprite
+    mut query: Query<(&mut Tile, &mut Sprite)>,
+) {
+    if !mouse.just_pressed(MouseButton::Left) {
+        return;
+    }
+
+    let spawn_pos_of_clicked_tile = match_click_to_tile(windows);
+    for (tile, mut sprite) in query.iter_mut() {
+        if tile.spawn_pos_xy == spawn_pos_of_clicked_tile {
+            sprite.color = Color::srgb(255., 0., 0.);
+            return;
+        }
+    }
 }
