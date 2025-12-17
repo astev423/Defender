@@ -1,6 +1,9 @@
-use bevy::{prelude::*, window::PrimaryWindow};
+use bevy::{ecs::system::SystemParam, prelude::*, window::PrimaryWindow};
 
-use crate::ui::{Money, place_item, update_money};
+use crate::{
+    placeables::place_tower,
+    ui::{Money, update_money},
+};
 
 #[derive(Component)]
 pub struct Tile {
@@ -40,28 +43,39 @@ fn match_click_to_tile(windows: Query<&Window, With<PrimaryWindow>>) -> (f32, f3
     //println!("matching y pos for tile starting at: {:?}", y_pos);
 }
 
+#[derive(SystemParam)]
+pub struct GameParams<'w, 's> {
+    pub tiles: Query<'w, 's, (&'static mut Tile, &'static mut Sprite)>,
+    pub money: Query<'w, 's, (&'static mut Money, &'static mut Text2d)>,
+}
+
+#[derive(SystemParam)]
+pub struct InputParams<'w, 's> {
+    pub mouse: Res<'w, ButtonInput<MouseButton>>,
+    pub windows: Query<'w, 's, &'static Window, With<PrimaryWindow>>,
+}
+
 /// Place things on tile clicked if user has enough money
 pub fn modify_clicked_tile(
-    mouse: Res<ButtonInput<MouseButton>>,
-    windows: Query<&Window, With<PrimaryWindow>>,
-    // Query all entities that have both a tile and sprite component
-    mut tile_query: Query<(&mut Tile, &mut Sprite)>,
-    money_query: Query<(&mut Money, &mut Text2d)>,
+    commands: Commands,
+    asset_server: Res<AssetServer>,
+    input: InputParams,
+    mut game_query: GameParams,
 ) {
-    if !mouse.just_pressed(MouseButton::Left) {
+    if !input.mouse.just_pressed(MouseButton::Left) {
         return;
     }
 
-    let spawn_pos_of_clicked_tile = match_click_to_tile(windows);
-    for (mut tile, mut sprite) in tile_query.iter_mut() {
+    // Find tile we clicked on and update it if possible
+    let spawn_pos_of_clicked_tile = match_click_to_tile(input.windows);
+    for (mut tile, mut sprite) in game_query.tiles.iter_mut() {
         if tile.spawn_pos_xy == spawn_pos_of_clicked_tile && !tile.occupied {
-            let result = update_money(-100, money_query);
-            if result.is_err() {
+            if update_money(-100, game_query.money).is_err() {
                 return;
             }
 
-            sprite.color = Color::srgb(255., 0., 0.);
-            place_item();
+            sprite.color = Color::hsl(0., 1., 0.9);
+            place_tower(commands, spawn_pos_of_clicked_tile, asset_server);
             tile.occupied = true;
             return;
         }

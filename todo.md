@@ -1,5 +1,3 @@
--Make working grid system, grid changes color if user clicks on it
-
 -Make working weapon system, user can click on the turret icon and click on tiles to place turret and lower money by cost 
 
 -Make basic enemy that goes towards the center

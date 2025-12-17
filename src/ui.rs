@@ -1,6 +1,5 @@
 use bevy::{
-    app::{App, Startup, Update},
-    color::Color,
+    app::{App, Startup},
     ecs::{
         component::Component,
         query::With,
@@ -8,7 +7,7 @@ use bevy::{
     },
     input::{ButtonInput, mouse::MouseButton},
     sprite::Text2d,
-    text::{TextColor, TextFont},
+    text::TextFont,
     transform::components::Transform,
     window::{PrimaryWindow, Window},
 };
@@ -56,10 +55,8 @@ pub fn update_money<'a>(
 }
 
 pub fn check_placements_or_selections(
-    mouse: Res<ButtonInput<MouseButton>>,
-    windows: Query<&Window, With<PrimaryWindow>>,
+    _mouse: Res<ButtonInput<MouseButton>>,
+    _windows: Query<&Window, With<PrimaryWindow>>,
     // Query all entities that have both a tile and sprite component
 ) {
 }
-
-pub fn place_item() {}

@@ -32,3 +32,5 @@ fn spawn_cam_and_core(mut commands: Commands) {
         Transform::from_xyz(0.0, 0.0, 1.0),
     ));
 }
+
+fn update_healths() {}
