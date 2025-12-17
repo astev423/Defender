@@ -1,3 +1,3 @@
 pub mod grid;
-pub mod towers;
+pub mod placeables;
 pub mod ui;

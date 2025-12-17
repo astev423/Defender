@@ -1,13 +1,7 @@
 // first make a grid, then let users place things on that grid
 
-use bevy::{
-    prelude::*,
-    window::{PrimaryWindow, WindowResolution},
-};
-use defender::{
-    grid::{grid_plugin, make_grid, modify_clicked_tile},
-    ui::{Money, decrease_money},
-};
+use bevy::{prelude::*, window::WindowResolution};
+use defender::{grid::grid_plugin, ui::ui_plugin};
 
 fn main() {
     App::new()
@@ -21,8 +15,8 @@ fn main() {
             ..default()
         }),))
         .add_plugins(grid_plugin)
-        .add_systems(Startup, setup) // run once at the beginning
-        .add_systems(Update, modify_clicked_tile)
+        .add_plugins(ui_plugin)
+        .add_systems(Startup, spawn_cam_and_core) // run once at the beginning
         .run();
 }
 
@@ -30,14 +24,8 @@ fn main() {
 #[derive(Component)]
 struct Core;
 
-fn setup(mut commands: Commands, windows: Query<&Window, With<PrimaryWindow>>) {
-    let money = Money { amount: 1000 };
+fn spawn_cam_and_core(mut commands: Commands) {
     commands.spawn(Camera2d::default());
-    commands.spawn((
-        Text2d::new(format!("{}", money.amount)),
-        money,
-        Transform::from_xyz(-500., 200., 0.),
-    ));
     commands.spawn((
         Core,
         Sprite::from_color(Color::WHITE, Vec2 { x: 40.0, y: 40.0 }),
