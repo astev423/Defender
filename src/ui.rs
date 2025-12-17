@@ -1,7 +1,6 @@
 use bevy::{
     app::{App, Startup},
     ecs::{
-        component::Component,
         query::With,
         system::{Commands, Query, Res},
     },
@@ -12,10 +11,7 @@ use bevy::{
     window::{PrimaryWindow, Window},
 };
 
-#[derive(Component)]
-pub struct Money {
-    pub amount: i32,
-}
+use crate::components::Money;
 
 pub fn ui_plugin(app: &mut App) {
     app.add_systems(Startup, spawn_money);
@@ -49,7 +45,7 @@ pub fn update_money<'a>(
 
     *money_amount += amount;
     let money_text = &mut money.1.0;
-    *money_text = format!("Money: {}", money_amount);
+    *money_text = format!("Money: {money_amount}");
 
     Ok(())
 }
