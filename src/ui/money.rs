@@ -11,7 +11,12 @@ use bevy::{
     window::{PrimaryWindow, Window},
 };
 
-use crate::components::Money;
+use bevy::ecs::component::Component;
+
+#[derive(Component)]
+pub struct Money {
+    pub amount: i32,
+}
 
 pub fn ui_plugin(app: &mut App) {
     app.add_systems(Startup, spawn_money);

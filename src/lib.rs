@@ -1,5 +1,3 @@
-pub mod components;
-pub mod enemies;
-pub mod grid;
-pub mod placeables;
+pub mod game;
+pub mod shared;
 pub mod ui;

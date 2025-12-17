@@ -1,18 +1,43 @@
 use bevy::{ecs::system::SystemParam, prelude::*, window::PrimaryWindow};
 
-use crate::{
-    components::{Money, Tile},
-    placeables::place_tower,
-    ui::update_money,
-};
+use bevy::{ecs::component::Component, math::Vec2};
+
+use crate::game::placeables::place_tower;
+use crate::shared::components::Health;
+use crate::ui::money::{Money, update_money};
+
+#[derive(Component)]
+pub struct Tile {
+    pub spawn_pos: Vec2,
+    pub occupied: bool,
+}
+
+#[derive(Component)]
+struct Core;
 
 pub fn grid_plugin(app: &mut App) {
     app.add_systems(Startup, make_grid)
         .add_systems(Update, modify_clicked_tile);
 }
 
-// This sets up the 28 long 14 high grid, each tile is an entity
-pub fn make_grid(mut commands: Commands) {
+pub fn spawn_core(commands: &mut Commands, asset_server: Res<AssetServer>) {
+    let mut transform = Transform::from_xyz(0., 0., 1.);
+    transform.scale = Vec3 {
+        x: 2.,
+        y: 2.,
+        z: 1.,
+    };
+    commands.spawn((
+        Core,
+        Health(10000),
+        Sprite::from_image(asset_server.load("core.png")),
+        transform,
+    ));
+}
+
+/// This sets up the 28 long 14 high grid, each tile is an entity, core in center
+pub fn make_grid(mut commands: Commands, asset_server: Res<AssetServer>) {
+    spawn_core(&mut commands, asset_server);
     for x in (41..1230).step_by(41) {
         for y in (41..655).step_by(41) {
             let xf32 = x as f32;

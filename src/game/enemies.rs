@@ -1,13 +1,19 @@
 use bevy::{
     app::{App, Startup, Update},
     asset::AssetServer,
-    ecs::system::{Commands, Res},
+    ecs::{
+        component::Component,
+        system::{Commands, Res},
+    },
     math::Vec2,
     sprite::Sprite,
     transform::components::Transform,
 };
 
-use crate::components::{Health, enemies::Crier};
+use crate::shared::components::Health;
+
+#[derive(Component)]
+pub struct Crier;
 
 pub fn enemy_plugin(app: &mut App) {
     app.add_systems(Startup, spawn_enemies)
