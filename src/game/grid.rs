@@ -13,11 +13,12 @@ pub struct Tile {
 }
 
 #[derive(Component)]
-struct Core;
+pub struct Core;
 
 pub fn grid_plugin(app: &mut App) {
     app.add_systems(Startup, make_grid)
-        .add_systems(Update, modify_clicked_tile);
+        .add_systems(Update, modify_clicked_tile)
+        .add_systems(Update, display_core_health);
 }
 
 pub fn spawn_core(commands: &mut Commands, asset_server: Res<AssetServer>) {
@@ -30,9 +31,32 @@ pub fn spawn_core(commands: &mut Commands, asset_server: Res<AssetServer>) {
     commands.spawn((
         Core,
         Health(10000),
+        Text2d::new("Health: 10000".to_string()),
+        TextColor(Color::BLACK),
+        TextFont {
+            font_size: 15.,
+            ..TextFont::default()
+        },
         Sprite::from_image(asset_server.load("core.png")),
         transform,
     ));
+}
+
+// Make it so text is a seperate entity but has the core component so we can translate it up without
+// affecting the core
+
+pub fn display_core_health(mut query: Query<(&mut Health, &mut Transform, &mut Text2d)>) {
+    let (mut health, mut transform, mut text) = query
+        .single_mut()
+        .expect("Why are there multiple healths with texts?");
+
+    health.0 -= 1;
+    transform.translation = Vec3 {
+        x: 0.,
+        y: 50.,
+        z: 1.,
+    };
+    text.0 = format!("Health: {}", health.0);
 }
 
 /// This sets up the 28 long 14 high grid, each tile is an entity, core in center

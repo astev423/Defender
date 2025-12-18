@@ -1,6 +1,10 @@
--Make working weapon system, user can click on the turret icon and click on tiles to place turret and lower money by cost 
+-Add health bar above enemies and core
 
--Make basic enemy that goes towards the center
+-Make towers damage enemies if in range
+
+-Initially allow enemies to ignore and walk through defences
+
+-Make working weapon system, user can click on the turret icon and click on tiles to place turret and lower money by cost 
 
 -Game over screen if enemy reaches the center, allow retry if clicked
 

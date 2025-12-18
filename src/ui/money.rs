@@ -1,12 +1,13 @@
 use bevy::{
     app::{App, Startup},
+    color::Color,
     ecs::{
         query::With,
         system::{Commands, Query, Res},
     },
     input::{ButtonInput, mouse::MouseButton},
     sprite::Text2d,
-    text::TextFont,
+    text::{TextColor, TextFont},
     transform::components::Transform,
     window::{PrimaryWindow, Window},
 };
