@@ -1,6 +1,6 @@
--Use delta to make movement and damage consistent
+-Make core only take damage when enemies near it
 
--Initially allow enemies to ignore and walk through defences
+-Make tower only attack one enemy at a time, maybe future towers can multiple (like 5 max)
 
 -Make working weapon system, user can click on the turret icon and click on tiles to place turret and lower money by cost 
 

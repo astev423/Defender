@@ -3,12 +3,14 @@ use bevy::{
     asset::AssetServer,
     ecs::{
         component::Component,
-        query::Without,
-        system::{Commands, Query, Res},
+        entity::Entity,
+        query::{With, Without},
+        system::{Commands, Query, Res, ResMut},
         world::Mut,
     },
     math::{Vec2, Vec3},
     sprite::Sprite,
+    time::Time,
     transform::components::Transform,
 };
 
@@ -34,8 +36,8 @@ impl Tower {
 
     pub fn get_damage(&self) -> f32 {
         match self.name {
-            TowerName::Shockah => return 70.,
-            TowerName::Burnah => return 140.,
+            TowerName::Shockah => return 7.,
+            TowerName::Burnah => return 14.,
         }
     }
 }
@@ -55,14 +57,17 @@ pub fn place_tower(mut commands: Commands, pos: Vec2, asset_server: Res<AssetSer
     ));
 }
 
+/// Loop through all towers, each time checking if enemy in range and attacking if they are
 pub fn search_for_enemies(
+    mut time: ResMut<Time>,
     towers: Query<(&mut Transform, &mut Tower), Without<Enemy>>,
-    mut enemies: Query<(&mut Transform, &mut Enemy, &mut Health)>,
+    mut enemies: Query<(&mut Transform, Entity, &mut Health), With<Enemy>>,
+    mut commands: Commands,
 ) {
     for (tower_pos, tower) in towers.iter() {
-        for (enemy_pos, enemy, health) in enemies.iter_mut() {
+        for (enemy_pos, enemy_entity, health) in enemies.iter_mut() {
             if is_enemy_in_range(tower, &tower_pos.translation, &enemy_pos.translation) {
-                attack_enemy(tower, enemy, health);
+                attack_enemy(tower, &mut time, enemy_entity, &mut commands, health);
             }
         }
     }
@@ -77,16 +82,25 @@ fn is_enemy_in_range(tower: &Tower, tower_pos: &Vec3, enemy_pos: &Vec3) -> bool 
     .length();
 
     if dist_between_entities <= range {
-        println!("Enemy in range!!!");
         return true;
     }
 
     false
 }
 
-fn attack_enemy(tower: &Tower, enemy: Mut<'_, Enemy>, mut health: Mut<'_, Health>) {
-    // need delta
-    let damage = tower.get_damage();
+fn attack_enemy(
+    tower: &Tower,
+    time: &mut ResMut<'_, Time>,
+    enemy_entity: Entity,
+    commands: &mut Commands,
+    mut health: Mut<'_, Health>,
+) {
+    let delta = time.delta_secs();
+    let damage = tower.get_damage() * delta;
     health.0 -= damage;
-    println!("{:?}", health.0);
+
+    // Despawn if health low enough
+    if health.0 < 0. {
+        commands.entity(enemy_entity).try_despawn();
+    }
 }

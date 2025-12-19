@@ -8,6 +8,7 @@ use bevy::{
     },
     math::{Vec2, Vec3},
     sprite::Sprite,
+    time::Time,
     transform::components::Transform,
 };
 
@@ -21,6 +22,21 @@ pub enum EnemyType {
 #[derive(Component)]
 pub struct Enemy {
     pub kind: EnemyType,
+}
+
+impl Enemy {
+    pub fn get_damage(&self) -> f32 {
+        match self.kind {
+            EnemyType::Crier => return 30.,
+            EnemyType::Gazer => return 40.,
+        }
+    }
+    pub fn get_speed(&self) -> f32 {
+        match self.kind {
+            EnemyType::Crier => return 40.,
+            EnemyType::Gazer => return 50.,
+        }
+    }
 }
 
 pub fn enemy_plugin(app: &mut App) {
@@ -49,22 +65,24 @@ pub fn spawn_enemy(commands: &mut Commands, pos: Vec2, asset_server: &Res<AssetS
 /// Enemy moves straight to core, it can go past towers
 /// Use without to make sure transforms don't overlap
 pub fn move_enemy(
+    time: Res<Time>,
     mut core_transform: Query<&Transform, (Without<Enemy>, With<Core>)>,
-    enemy_locations: Query<&mut Transform, With<Enemy>>,
+    enemies: Query<(&mut Transform, &Enemy)>,
 ) {
+    let delta = time.delta_secs();
     let core_pos = core_transform.single_mut().unwrap().translation;
-    for mut location in enemy_locations {
-        move_to_nearest_defence(location.translation, core_pos, &mut location.translation)
+    for (mut transform, enemy) in enemies {
+        move_to_nearest_defence(delta, core_pos, &mut transform.translation, enemy)
     }
 }
 
-fn move_to_nearest_defence(enemy_pos: Vec3, core_pos: Vec3, transform: &mut Vec3) {
+fn move_to_nearest_defence(delta: f32, core_pos: Vec3, enemy_pos: &mut Vec3, enemy: &Enemy) {
     let hypotenuse_vec = Vec2 {
         x: enemy_pos.x - core_pos.x,
         y: enemy_pos.y - core_pos.y,
     };
 
-    let normalized_vec = hypotenuse_vec.normalize();
-    transform.x += -normalized_vec.x / 2.;
-    transform.y += -normalized_vec.y / 2.;
+    let velocity = hypotenuse_vec.normalize() * delta * enemy.get_speed();
+    enemy_pos.x += -velocity.x / 2.;
+    enemy_pos.y += -velocity.y / 2.;
 }
