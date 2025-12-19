@@ -85,6 +85,7 @@ fn is_enemy_in_range(tower: &Tower, tower_pos: &Vec3, enemy_pos: &Vec3) -> bool 
 }
 
 fn attack_enemy(tower: &Tower, enemy: Mut<'_, Enemy>, mut health: Mut<'_, Health>) {
+    // need delta
     let damage = tower.get_damage();
     health.0 -= damage;
     println!("{:?}", health.0);

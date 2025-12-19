@@ -1,5 +1,4 @@
-
--Make towers damage enemies if in range
+-Use delta to make movement and damage consistent
 
 -Initially allow enemies to ignore and walk through defences
 
