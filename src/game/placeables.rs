@@ -5,7 +5,7 @@ use bevy::{
         component::Component,
         entity::Entity,
         query::{With, Without},
-        system::{Commands, Query, Res, ResMut},
+        system::{Commands, Query, Res},
         world::Mut,
     },
     math::{Vec2, Vec3},
@@ -40,6 +40,13 @@ impl Tower {
             TowerName::Burnah => return 14.,
         }
     }
+
+    pub fn how_many_can_tower_attack(&self) -> f32 {
+        match self.name {
+            TowerName::Shockah => return 1.,
+            TowerName::Burnah => return 1.,
+        }
+    }
 }
 
 pub fn placeables_plugin(app: &mut App) {
@@ -59,15 +66,20 @@ pub fn place_tower(mut commands: Commands, pos: Vec2, asset_server: Res<AssetSer
 
 /// Loop through all towers, each time checking if enemy in range and attacking if they are
 pub fn search_for_enemies(
-    mut time: ResMut<Time>,
+    time: Res<Time>,
     towers: Query<(&mut Transform, &mut Tower), Without<Enemy>>,
     mut enemies: Query<(&mut Transform, Entity, &mut Health), With<Enemy>>,
     mut commands: Commands,
 ) {
     for (tower_pos, tower) in towers.iter() {
+        let mut enemies_attacked = 0.;
         for (enemy_pos, enemy_entity, health) in enemies.iter_mut() {
+            if enemies_attacked > tower.how_many_can_tower_attack() {
+                break;
+            }
             if is_enemy_in_range(tower, &tower_pos.translation, &enemy_pos.translation) {
-                attack_enemy(tower, &mut time, enemy_entity, &mut commands, health);
+                attack_enemy(tower, &time, enemy_entity, &mut commands, health);
+                enemies_attacked += 1.;
             }
         }
     }
@@ -90,7 +102,7 @@ fn is_enemy_in_range(tower: &Tower, tower_pos: &Vec3, enemy_pos: &Vec3) -> bool 
 
 fn attack_enemy(
     tower: &Tower,
-    time: &mut ResMut<'_, Time>,
+    time: &Res<'_, Time>,
     enemy_entity: Entity,
     commands: &mut Commands,
     mut health: Mut<'_, Health>,

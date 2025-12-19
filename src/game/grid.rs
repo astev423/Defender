@@ -2,6 +2,7 @@ use bevy::{ecs::system::SystemParam, prelude::*, window::PrimaryWindow};
 
 use bevy::{ecs::component::Component, math::Vec2};
 
+use crate::game::enemies::Enemy;
 use crate::game::placeables::place_tower;
 use crate::shared::components::Health;
 use crate::ui::money::{Money, update_money};
@@ -21,7 +22,7 @@ pub struct CoreText;
 pub fn grid_plugin(app: &mut App) {
     app.add_systems(Startup, make_grid)
         .add_systems(Update, modify_clicked_tile)
-        .add_systems(Update, display_core_health);
+        .add_systems(Update, update_core_health);
 }
 
 pub fn spawn_core(commands: &mut Commands, asset_server: Res<AssetServer>) {
@@ -33,7 +34,7 @@ pub fn spawn_core(commands: &mut Commands, asset_server: Res<AssetServer>) {
     };
     commands.spawn((
         Core,
-        Health(10000.),
+        Health(3000.),
         Sprite::from_image(asset_server.load("core.png")),
         transform,
     ));
@@ -52,21 +53,42 @@ pub fn spawn_core(commands: &mut Commands, asset_server: Res<AssetServer>) {
     ));
 }
 
-// Make it so text is a seperate entity but has the core component so we can translate it up without
-// affecting the core
-
-pub fn display_core_health(
+pub fn update_core_health(
+    time: Res<Time>,
     mut text: Query<&mut Text2d, With<CoreText>>,
     mut core_health: Query<&mut Health, With<Core>>,
+    enemies: Query<(&Transform, &Enemy)>,
 ) {
-    let mut text = text
-        .single_mut()
-        .expect("Why are there multiple texts with cores?");
+    let delta = time.delta_secs();
     let mut core_health = core_health
         .single_mut()
         .expect("Why are there multiple cores with healths?");
+    let text = text
+        .single_mut()
+        .expect("Why are there multiple cores with text?");
 
-    core_health.0 -= 1.;
+    display_core_health(text, &core_health);
+    for (enemy_transform, enemy) in enemies {
+        if is_enemy_on_core(&enemy_transform.translation) {
+            decrease_core_health(&mut core_health, &enemy, delta);
+        }
+    }
+}
+
+fn is_enemy_on_core(enemy_pos: &Vec3) -> bool {
+    if enemy_pos.x.abs() < 100. && enemy_pos.y.abs() < 30. {
+        return true;
+    }
+
+    false
+}
+
+fn decrease_core_health(core_health: &mut Mut<'_, Health>, enemy: &Enemy, delta: f32) {
+    core_health.0 -= enemy.get_damage() * delta;
+}
+
+// Text and core_health not mutable above but they are here since ownership is transfered
+fn display_core_health(mut text: Mut<'_, Text2d>, core_health: &Mut<'_, Health>) {
     text.0 = format!("Health: {}", core_health.0);
 }
 
