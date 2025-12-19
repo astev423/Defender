@@ -1,4 +1,3 @@
--Add health bar above enemies and core
 
 -Make towers damage enemies if in range
 
@@ -13,5 +12,7 @@
 -Add more turrets and challenging enemy spawns, once 10 die spawn 10 more, etc
 
 -Make a full level and optionally add walls with health
+
+-Add health bar above enemies
 
 -Make AI smarter, it should attack walls and turrets if they are closer than the center
