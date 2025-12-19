@@ -6,7 +6,7 @@ use bevy::{
     },
     input::{ButtonInput, mouse::MouseButton},
     sprite::Text2d,
-    text::{TextFont},
+    text::TextFont,
     transform::components::Transform,
     window::{PrimaryWindow, Window},
 };
@@ -38,9 +38,9 @@ pub fn spawn_money(mut commands: Commands) {
 /// Subtract building cost placed from money if user has enough money, otherwise err
 pub fn update_money<'a>(
     amount: i32,
-    mut money_query: Query<'_, '_, (&mut Money, &mut Text2d)>,
+    mut money: Query<'_, '_, (&mut Money, &mut Text2d)>,
 ) -> Result<(), &'a str> {
-    let money = &mut money_query
+    let money = &mut money
         .single_mut()
         .expect("There are multiple money structs, that shouldn't happen!");
     let money_amount = &mut money.0.amount;

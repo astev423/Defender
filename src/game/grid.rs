@@ -33,7 +33,7 @@ pub fn spawn_core(commands: &mut Commands, asset_server: Res<AssetServer>) {
     };
     commands.spawn((
         Core,
-        Health(10000),
+        Health(10000.),
         Sprite::from_image(asset_server.load("core.png")),
         transform,
     ));
@@ -56,17 +56,17 @@ pub fn spawn_core(commands: &mut Commands, asset_server: Res<AssetServer>) {
 // affecting the core
 
 pub fn display_core_health(
-    mut text_query: Query<&mut Text2d, With<CoreText>>,
-    mut health_query: Query<&mut Health, With<Core>>,
+    mut text: Query<&mut Text2d, With<CoreText>>,
+    mut core_health: Query<&mut Health, With<Core>>,
 ) {
-    let mut text = text_query
+    let mut text = text
         .single_mut()
         .expect("Why are there multiple texts with cores?");
-    let mut core_health = health_query
+    let mut core_health = core_health
         .single_mut()
         .expect("Why are there multiple cores with healths?");
 
-    core_health.0 -= 1;
+    core_health.0 -= 1.;
     text.0 = format!("Health: {}", core_health.0);
 }
 
