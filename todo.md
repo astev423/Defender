@@ -22,3 +22,11 @@ health bar and can die
 
 -Let users right click to delete towers and get all their money back so they can build more, more
 interactive that way
+
+-Add reset feature, despawn all enemies by querying for all entities and deleting them all, if that doesn't work, add
+a removeable component to all entites you want to remove and query for that, or instead use DespawnOnExit component
+
+-Add lots of ui features like main menu, respawn screen, allow users to customize starting cash, increase/decrease
+number of enemies, etc. Press esc to open up menu for that
+
+-Instead of instantly spawning let user plan out at start and press space to start the level

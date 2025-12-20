@@ -10,5 +10,5 @@ pub mod tower_selection;
 
 pub fn ui_plugin(app: &mut App) {
     app.add_systems(Startup, spawn_money)
-        .insert_resource(ChosenTower(TowerName::Burnah));
+        .insert_resource(ChosenTower(TowerName::Shockah));
 }
