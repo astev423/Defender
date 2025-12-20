@@ -13,6 +13,7 @@ use bevy::{
     time::Time,
     transform::components::Transform,
 };
+use rand::Rng;
 
 use crate::{game::grid::Core, shared::components::Health};
 
@@ -35,8 +36,8 @@ impl Enemy {
     }
     pub fn get_speed(&self) -> f32 {
         match self.kind {
-            EnemyType::Crier => return 40.,
-            EnemyType::Gazer => return 50.,
+            EnemyType::Crier => return 30.,
+            EnemyType::Gazer => return 40.,
         }
     }
 }
@@ -46,11 +47,19 @@ pub fn enemy_plugin(app: &mut App) {
         .add_systems(Update, move_enemy);
 }
 
+// Spawn 10 enemies randomly
 pub fn spawn_enemies(mut commands: Commands, asset_server: Res<AssetServer>) {
-    spawn_enemy(&mut commands, Vec2 { x: -400., y: 200. }, &asset_server);
-    spawn_enemy(&mut commands, Vec2 { x: 400., y: -200. }, &asset_server);
-    spawn_enemy(&mut commands, Vec2 { x: 500., y: 0. }, &asset_server);
-    spawn_enemy(&mut commands, Vec2 { x: 500., y: 100. }, &asset_server);
+    let min_pos = Vec2::new(-300., -200.);
+    let max_pos = Vec2::new(802., 330.);
+
+    let mut rng = rand::rng();
+    for _ in 0..10 {
+        let pos = Vec2::new(
+            rng.random_range(min_pos.x..=max_pos.x),
+            rng.random_range(min_pos.y..=max_pos.y),
+        );
+        spawn_enemy(&mut commands, pos, &asset_server);
+    }
 }
 
 pub fn spawn_enemy(commands: &mut Commands, pos: Vec2, asset_server: &Res<AssetServer>) {
@@ -74,9 +83,10 @@ pub fn move_enemy(
 ) {
     let delta = time.delta_secs();
     let core_pos = core_transform.single_mut().unwrap().translation;
+
     for (mut transform, enemy, health) in enemies {
-        let mut enemy_pos = &mut transform.translation;
-        move_to_nearest_defence(delta, core_pos, &mut enemy_pos, enemy);
+        let enemy_pos = &mut transform.translation;
+        move_to_nearest_defence(delta, core_pos, enemy_pos, enemy);
         update_health_bar(enemy_pos, health.0, &mut gizmos);
     }
 }

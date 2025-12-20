@@ -5,7 +5,7 @@ pub mod ui;
 use crate::{
     game::{enemies::enemy_plugin, grid::grid_plugin, placeables::placeables_plugin},
     shared::systems::debug_plugin,
-    ui::money::ui_plugin,
+    ui::ui_plugin,
 };
 use bevy::prelude::*;
 

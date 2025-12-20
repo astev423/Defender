@@ -18,10 +18,6 @@ pub struct Money {
     pub amount: i32,
 }
 
-pub fn ui_plugin(app: &mut App) {
-    app.add_systems(Startup, spawn_money);
-}
-
 pub fn spawn_money(mut commands: Commands) {
     let money = Money { amount: 1000 };
     commands.spawn((

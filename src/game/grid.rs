@@ -8,6 +8,7 @@ use crate::game::enemies::Enemy;
 use crate::game::placeables::place_tower;
 use crate::shared::components::Health;
 use crate::ui::money::{Money, update_money};
+use crate::ui::tower_selection::ChosenTower;
 
 #[derive(Component)]
 pub struct Tile {
@@ -141,6 +142,7 @@ pub struct InputParams<'w, 's> {
 
 /// Place things on tile clicked if user has enough money
 pub fn modify_clicked_tile(
+    chosen_tower: Res<ChosenTower>,
     commands: Commands,
     asset_server: Res<AssetServer>,
     input: InputParams,
@@ -159,7 +161,12 @@ pub fn modify_clicked_tile(
             }
 
             sprite.color = Color::hsl(0., 1., 0.9);
-            place_tower(commands, spawn_pos_of_clicked_tile, asset_server);
+            place_tower(
+                &chosen_tower.0,
+                commands,
+                spawn_pos_of_clicked_tile,
+                asset_server,
+            );
             tile.occupied = true;
             return;
         }

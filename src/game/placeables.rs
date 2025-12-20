@@ -7,7 +7,6 @@ use bevy::{
         entity::Entity,
         query::{With, Without},
         system::{Commands, Query, Res},
-        world::Mut,
     },
     gizmos::gizmos::Gizmos,
     math::{Vec2, Vec3},
@@ -26,27 +25,30 @@ pub enum TowerName {
 #[derive(Component)]
 pub struct Tower {
     pub name: TowerName,
+    pub range: f32,
+    pub damage: f32,
+    pub max_targets: i32,
 }
 
 impl Tower {
-    pub fn get_range(&self) -> f32 {
-        match self.name {
-            TowerName::Shockah => return 140.,
-            TowerName::Burnah => return 70.,
-        }
-    }
-
-    pub fn get_damage(&self) -> f32 {
-        match self.name {
-            TowerName::Shockah => return 7.,
-            TowerName::Burnah => return 14.,
-        }
-    }
-
-    pub fn how_many_can_tower_attack(&self) -> i32 {
-        match self.name {
-            TowerName::Shockah => return 1,
-            TowerName::Burnah => return 1,
+    pub fn new(name: &TowerName) -> Tower {
+        match name {
+            TowerName::Shockah => {
+                return Tower {
+                    name: TowerName::Shockah,
+                    range: 300.,
+                    damage: 1.5,
+                    max_targets: 1,
+                };
+            }
+            TowerName::Burnah => {
+                return Tower {
+                    name: TowerName::Burnah,
+                    range: 50.,
+                    damage: 5.,
+                    max_targets: 5,
+                };
+            }
         }
     }
 }
@@ -55,14 +57,22 @@ pub fn placeables_plugin(app: &mut App) {
     app.add_systems(Update, search_for_enemies);
 }
 
-pub fn place_tower(mut commands: Commands, pos: Vec2, asset_server: Res<AssetServer>) {
-    let tower = asset_server.load("defences/tower1.png");
+pub fn place_tower(
+    chosen_tower: &TowerName,
+    mut commands: Commands,
+    pos: Vec2,
+    asset_server: Res<AssetServer>,
+) {
+    let chosen_tower_str = match chosen_tower {
+        TowerName::Shockah => "shockah",
+        TowerName::Burnah => "burnah",
+    };
+
+    let tower = asset_server.load(format!("defences/{chosen_tower_str}.png"));
     commands.spawn((
         Sprite::from_image(tower),
         Transform::from_xyz(pos.x - 620., -pos.y + 360., 1.),
-        Tower {
-            name: TowerName::Shockah,
-        },
+        Tower::new(chosen_tower),
     ));
 }
 
@@ -74,15 +84,17 @@ pub fn search_for_enemies(
     mut commands: Commands,
     mut gizmos: Gizmos,
 ) {
-    for (tower_pos, tower) in towers.iter() {
+    for (tower_transform, tower) in towers.iter() {
+        let tower_pos = tower_transform.translation;
         let mut enemies_attacked = 0;
-        for (enemy_pos, enemy_entity, health) in enemies.iter_mut() {
-            if enemies_attacked >= tower.how_many_can_tower_attack() {
+        for (enemy_transform, enemy_entity, mut health) in enemies.iter_mut() {
+            let enemy_pos = enemy_transform.translation;
+            if enemies_attacked >= tower.max_targets {
                 break;
             }
-            if is_enemy_in_range(tower, &tower_pos.translation, &enemy_pos.translation) {
-                reduce_enemy_health(tower, &time, enemy_entity, &mut commands, health);
-                zap_enemy_animation(&mut gizmos, &tower_pos.translation, &enemy_pos.translation);
+            if is_enemy_in_range(tower, &tower_pos, &enemy_pos) {
+                reduce_enemy_health(tower, &time, enemy_entity, &mut commands, &mut health.0);
+                do_attack_animation(tower, &mut gizmos, &tower_pos, &enemy_pos);
                 enemies_attacked += 1;
             }
         }
@@ -90,7 +102,7 @@ pub fn search_for_enemies(
 }
 
 fn is_enemy_in_range(tower: &Tower, tower_pos: &Vec3, enemy_pos: &Vec3) -> bool {
-    let range = tower.get_range();
+    let range = tower.range;
     let dist_between_entities = Vec2 {
         x: (tower_pos.x - enemy_pos.x).abs(),
         y: (tower_pos.y - enemy_pos.y).abs(),
@@ -109,15 +121,22 @@ fn reduce_enemy_health(
     time: &Res<'_, Time>,
     enemy_entity: Entity,
     commands: &mut Commands,
-    mut health: Mut<'_, Health>,
+    health: &mut f32,
 ) {
     let delta = time.delta_secs();
-    let damage = tower.get_damage() * delta;
-    health.0 -= damage;
+    let damage = tower.damage * delta;
+    *health -= damage;
 
     // Despawn if health low enough
-    if health.0 <= 0. {
+    if *health <= 0. {
         commands.entity(enemy_entity).try_despawn();
+    }
+}
+
+fn do_attack_animation(tower: &Tower, gizmos: &mut Gizmos, tower_pos: &Vec3, enemy_pos: &Vec3) {
+    match tower.name {
+        TowerName::Shockah => zap_enemy_animation(gizmos, &tower_pos, &enemy_pos),
+        TowerName::Burnah => burn_enemy_animation(gizmos, &tower_pos, &enemy_pos),
     }
 }
 
@@ -134,3 +153,5 @@ fn zap_enemy_animation(gizmos: &mut Gizmos, tower_pos: &Vec3, enemy_pos: &Vec3) 
 
     gizmos.line_2d(tower_point, enemy_point, Color::hsl(62., 1., 0.5));
 }
+
+fn burn_enemy_animation(gizmos: &mut Gizmos, tower_pos: &Vec3, enemy_pos: &Vec3) {}
