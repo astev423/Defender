@@ -1,3 +1,5 @@
+use std::panic;
+
 use bevy::{ecs::system::SystemParam, prelude::*, window::PrimaryWindow};
 
 use bevy::{ecs::component::Component, math::Vec2};
@@ -70,7 +72,7 @@ pub fn update_core_health(
     display_core_health(text, &core_health);
     for (enemy_transform, enemy) in enemies {
         if is_enemy_on_core(&enemy_transform.translation) {
-            decrease_core_health(&mut core_health, &enemy, delta);
+            decrease_core_health(&mut core_health.0, &enemy, delta);
         }
     }
 }
@@ -83,8 +85,11 @@ fn is_enemy_on_core(enemy_pos: &Vec3) -> bool {
     false
 }
 
-fn decrease_core_health(core_health: &mut Mut<'_, Health>, enemy: &Enemy, delta: f32) {
-    core_health.0 -= enemy.get_damage() * delta;
+fn decrease_core_health(core_health: &mut f32, enemy: &Enemy, delta: f32) {
+    *core_health -= enemy.get_damage() * delta;
+    if *core_health <= 0. {
+        panic::panic_any("YOU DIED!");
+    }
 }
 
 // Text and core_health not mutable above but they are here since ownership is transfered

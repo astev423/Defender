@@ -1,6 +1,7 @@
 use bevy::{
     app::{App, Update},
     asset::AssetServer,
+    color::Color,
     ecs::{
         component::Component,
         entity::Entity,
@@ -8,6 +9,7 @@ use bevy::{
         system::{Commands, Query, Res},
         world::Mut,
     },
+    gizmos::gizmos::Gizmos,
     math::{Vec2, Vec3},
     sprite::Sprite,
     time::Time,
@@ -41,10 +43,10 @@ impl Tower {
         }
     }
 
-    pub fn how_many_can_tower_attack(&self) -> f32 {
+    pub fn how_many_can_tower_attack(&self) -> i32 {
         match self.name {
-            TowerName::Shockah => return 1.,
-            TowerName::Burnah => return 1.,
+            TowerName::Shockah => return 1,
+            TowerName::Burnah => return 1,
         }
     }
 }
@@ -70,16 +72,18 @@ pub fn search_for_enemies(
     towers: Query<(&mut Transform, &mut Tower), Without<Enemy>>,
     mut enemies: Query<(&mut Transform, Entity, &mut Health), With<Enemy>>,
     mut commands: Commands,
+    mut gizmos: Gizmos,
 ) {
     for (tower_pos, tower) in towers.iter() {
-        let mut enemies_attacked = 0.;
+        let mut enemies_attacked = 0;
         for (enemy_pos, enemy_entity, health) in enemies.iter_mut() {
-            if enemies_attacked > tower.how_many_can_tower_attack() {
+            if enemies_attacked >= tower.how_many_can_tower_attack() {
                 break;
             }
             if is_enemy_in_range(tower, &tower_pos.translation, &enemy_pos.translation) {
-                attack_enemy(tower, &time, enemy_entity, &mut commands, health);
-                enemies_attacked += 1.;
+                reduce_enemy_health(tower, &time, enemy_entity, &mut commands, health);
+                zap_enemy_animation(&mut gizmos, &tower_pos.translation, &enemy_pos.translation);
+                enemies_attacked += 1;
             }
         }
     }
@@ -100,7 +104,7 @@ fn is_enemy_in_range(tower: &Tower, tower_pos: &Vec3, enemy_pos: &Vec3) -> bool 
     false
 }
 
-fn attack_enemy(
+fn reduce_enemy_health(
     tower: &Tower,
     time: &Res<'_, Time>,
     enemy_entity: Entity,
@@ -112,7 +116,21 @@ fn attack_enemy(
     health.0 -= damage;
 
     // Despawn if health low enough
-    if health.0 < 0. {
+    if health.0 <= 0. {
         commands.entity(enemy_entity).try_despawn();
     }
+}
+
+/// This draws a yellow line between two points
+fn zap_enemy_animation(gizmos: &mut Gizmos, tower_pos: &Vec3, enemy_pos: &Vec3) {
+    let tower_point = Vec2 {
+        x: tower_pos.x,
+        y: tower_pos.y,
+    };
+    let enemy_point = Vec2 {
+        x: enemy_pos.x,
+        y: enemy_pos.y,
+    };
+
+    gizmos.line_2d(tower_point, enemy_point, Color::hsl(62., 1., 0.5));
 }
